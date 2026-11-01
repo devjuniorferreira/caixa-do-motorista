@@ -108,7 +108,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-
 }
 .group.gain { border-left-color: var(--gain); }
 .group-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
-.group-head .num { font-size: 24px; }
+.group-head .num { font-size: 24px; white-space: nowrap; }
 .group .loss-text, .loss-text { color: var(--loss); }
 .gain-text { color: var(--gain); }
 .card { margin: 14px 0; padding: 14px; background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
@@ -158,7 +158,7 @@ button { font: inherit; cursor: pointer; }
 .hero { margin: 8px 0 14px; padding: 16px; border-radius: 10px; }
 .hero.pos { background: var(--gain-bg); }
 .hero.neg { background: var(--loss-bg); }
-.hero .big { font-size: 58px; line-height: 1; font-weight: 700; }
+.hero .big { font-size: clamp(40px, 13vw, 58px); line-height: 1; font-weight: 700; white-space: nowrap; }
 .hero.pos .big { color: var(--gain); }
 .hero.neg .big { color: var(--loss); }
 .hero .mid { margin-top: 14px; font-size: 36px; line-height: 1; font-weight: 600; }
@@ -204,6 +204,50 @@ textarea { margin-top: 8px; font-size: 14px; }
   border-radius: 999px;
 }
 .tabs button[aria-current="page"] { background: var(--sun); color: var(--sun-ink); }
+.tabs button { font-size: 16px; padding: 12px 4px; }
+input[type="checkbox"], input[type="radio"] { width: auto; }
+.dot { display: inline-block; flex: none; width: 11px; height: 11px; margin-right: 8px; border-radius: 50%; vertical-align: 1px; }
+.opt { font-weight: 400; }
+.sub.warn { color: var(--sun-ink); background: var(--sun-bg); display: inline-block; padding: 0 6px; border-radius: 4px; }
+:root[data-theme="dark"] .sub.warn { color: var(--sun); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .sub.warn { color: var(--sun); } }
+.sub.loss-text { color: var(--loss); font-weight: 500; }
+.row-end { display: flex; flex-direction: column; align-items: flex-end; gap: 2px; }
+.row-btns { display: flex; gap: 2px; align-items: center; }
+.link.plain { color: var(--ink); }
+.rows li.form-li { display: block; }
+.rows li.is-editing { background: var(--sun-bg); margin: 0 -8px; padding-left: 8px; padding-right: 8px; border-radius: 6px; }
+.ghost.sm { padding: 6px 10px; font-size: 15px; white-space: nowrap; }
+.ghost.add { width: 100%; margin-top: 8px; }
+.editing { margin: 12px 0 0; padding: 10px 12px; background: var(--sun-bg); border-radius: 6px; font-weight: 500; }
+.alert { margin: 8px 0 14px; padding: 10px 12px; background: var(--sun-bg); border-left: 6px solid var(--sun); border-radius: 6px; font-weight: 500; }
+.alert ul { margin: 4px 0 0; padding-left: 18px; font-weight: 400; }
+.bar { height: 12px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.bar i { display: block; height: 100%; background: var(--gain); border-radius: 999px; }
+.goal { margin-top: 12px; }
+.goal p { margin: 6px 0 0; }
+details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
+.check { display: flex; gap: 12px; align-items: flex-start; margin: 0; padding: 12px 0; color: var(--ink); font-size: 17px; border-top: 1px solid var(--line); cursor: pointer; }
+.check input { width: 22px; height: 22px; margin: 2px 0 0; flex: none; accent-color: var(--gain); }
+.check .sub { display: block; font-size: 14px; font-weight: 400; color: var(--muted); }
+.mod-extra { padding: 0 0 12px 34px; }
+.mod-extra label:first-child { margin-top: 0; }
+.swatches { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 4px; }
+.sw { position: relative; display: inline-block; margin: 0; cursor: pointer; }
+.sw input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.sw span { display: block; width: 34px; height: 34px; border-radius: 50%; border: 3px solid var(--surface); box-shadow: 0 0 0 1.5px var(--line); }
+.sw input:checked + span { box-shadow: 0 0 0 3px var(--ink); }
+.sw input:focus-visible + span { outline: 3px solid var(--sun); outline-offset: 3px; }
+.help { margin: 4px 0 0; font-size: 14px; color: var(--muted); }
+.seg { margin: 0 0 10px; }
+.chart { display: block; width: 100%; height: auto; margin-top: 8px; }
+.chart .b-gain { fill: var(--gain); }
+.chart .b-loss { fill: var(--loss); }
+.chart .axis { stroke: var(--line); stroke-width: 1; }
+.chart text { fill: var(--muted); font-size: 10px; font-family: 'Barlow', system-ui, sans-serif; }
+.hbar { margin-top: 10px; }
+.hbar-top { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; margin-bottom: 4px; }
+.hbar .bar { height: 10px; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
 </style>
 </head>
@@ -214,38 +258,66 @@ textarea { margin-top: 8px; font-size: 14px; }
 <nav class="tabs" aria-label="Seções">
   <button data-tab="lancar">Lançar</button>
   <button data-tab="km">Km</button>
-  <button data-tab="mes">Mês</button>
+  <button data-tab="resumo">Resumo</button>
+  <button data-tab="ajustes">Ajustes</button>
 </nav>
-
 <script>
 (function () {
   var KEY = 'caixa-motorista-v1';
-  var state = { entries: [], readings: [] };
+  var COLORS = ['#B63A2B', '#D9822B', '#C9A227', '#0B7A47', '#1F8A8A', '#2B7BB9', '#6A4FB3', '#B33A87', '#7A6A55', '#5B675F'];
+  var MODULES = [
+    ['metas', 'Metas de lucro', 'Meta do dia, da semana e do mês, mostrando quanto falta.'],
+    ['horas', 'Horas trabalhadas', 'Anote as horas rodadas no dia e veja o lucro por hora.'],
+    ['lembretes', 'Lembretes de manutenção', 'Avisa quando estiver chegando a troca de óleo, pneus etc., pela quilometragem.'],
+    ['custokm', 'Custo por km', 'Mostra quanto cada km rodado custa, somando todos os gastos.'],
+    ['graficos', 'Gráficos', 'Lucro por dia e gastos por categoria em gráfico, no Resumo.'],
+    ['semana', 'Resumo da semana', 'Além do mês, mostra o resumo de segunda a domingo.']
+  ];
+  function defaultCats() {
+    return [
+      { id: 'combustivel', kind: 'gasto', name: 'Combustível', color: '#D9822B', fuel: true },
+      { id: 'manutencao', kind: 'gasto', name: 'Manutenção', color: '#B63A2B', subs: ['Troca de óleo', 'Pneus', 'Freios', 'Revisão', 'Peças', 'Mecânico'] },
+      { id: 'alimentacao', kind: 'gasto', name: 'Alimentação na rua', color: '#C9A227' },
+      { id: 'lavagem', kind: 'gasto', name: 'Lavagem', color: '#2B7BB9' },
+      { id: 'fixos', kind: 'gasto', name: 'Gastos fixos', color: '#6A4FB3' },
+      { id: 'uber', kind: 'ganho', name: 'Uber', color: '#0B7A47' },
+      { id: '99', kind: 'ganho', name: '99', color: '#C9A227' },
+      { id: 'indrive', kind: 'ganho', name: 'InDrive', color: '#1F8A8A' },
+      { id: 'particular', kind: 'ganho', name: 'Particular', color: '#6A4FB3' }
+    ];
+  }
+  function blank() {
+    return { entries: [], readings: [], cats: [], fixed: [], hours: {}, reminders: [], cfg: { mods: {}, goals: {}, deprec: 0 } };
+  }
+
+  var state = blank();
   var storageOk = true;
   var tab = 'lancar';
   var formDate = todayISO();
   var mode = 'um';
   var oneCat = 'combustivel';
+  var editing = null;
+  var per = 'mes';
   var month = todayISO().slice(0, 7);
-
-  var CAT_NAME = { combustivel: 'Combustível', alimentacao: 'Alimentação na rua', lavagem: 'Lavagem', uber: 'Uber', '99': '99', particular: 'Particular' };
-  var GASTOS = ['combustivel', 'alimentacao', 'lavagem'];
-  var GANHOS = ['uber', '99', 'particular'];
-  var SIMPLE = [
-    ['f-alim', 'gasto', 'alimentacao'],
-    ['f-lav', 'gasto', 'lavagem'],
-    ['f-uber', 'ganho', 'uber'],
-    ['f-99', 'ganho', '99'],
-    ['f-part', 'ganho', 'particular']
-  ];
+  var weekStart = mondayOf(todayISO());
+  var catEdit = null;
 
   /* ---------- utilidades ---------- */
   function $(s) { return document.querySelector(s); }
-  function todayISO() {
-    var d = new Date();
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-  }
+  function $$(s, root) { return Array.prototype.slice.call((root || document).querySelectorAll(s)); }
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function isoOf(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function todayISO() { return isoOf(new Date()); }
+  function dateOf(s) { return new Date(+s.slice(0, 4), +s.slice(5, 7) - 1, +s.slice(8, 10)); }
+  function addDays(s, n) { var d = dateOf(s); d.setDate(d.getDate() + n); return isoOf(d); }
+  function mondayOf(s) { var d = dateOf(s); d.setDate(d.getDate() - (d.getDay() + 6) % 7); return isoOf(d); }
+  function daysIn(m) { return new Date(+m.slice(0, 4), +m.slice(5, 7), 0).getDate(); }
   function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
   function num(s) {
     if (s == null) return NaN;
     s = String(s).trim().replace(/\s|R\$/g, '');
@@ -254,25 +326,53 @@ textarea { margin-top: 8px; font-size: 14px; }
     var n = parseFloat(s);
     return isFinite(n) ? n : NaN;
   }
+  function inNum(n, max) { return n == null ? '' : n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: max || 2, useGrouping: false }); }
   function brl(n) { return n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }); }
   function lit(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' L'; }
   function kmf(n) { return n.toLocaleString('pt-BR', { maximumFractionDigits: 0 }) + ' km'; }
   function dec1(n) { return n.toLocaleString('pt-BR', { minimumFractionDigits: 1, maximumFractionDigits: 1 }); }
+  function hrs(n) { return n.toLocaleString('pt-BR', { maximumFractionDigits: 1 }) + ' h'; }
   function dm(iso) { return iso.slice(8, 10) + '/' + iso.slice(5, 7); }
   function dmy(iso) { return dm(iso) + '/' + iso.slice(0, 4); }
-  function say(el, text, err) { el.textContent = text; el.className = 'msg ' + (err ? 'err' : 'ok'); }
+  function say(el, text, err) { if (!el) return; el.textContent = text; el.className = 'msg ' + (err ? 'err' : 'ok'); }
   function sign(n) { return n < 0 ? 'loss-text' : 'gain-text'; }
+  function mod(k) { return !!state.cfg.mods[k]; }
+  function goal(k) { return +state.cfg.goals[k] || 0; }
+  function catById(id) { for (var i = 0; i < state.cats.length; i++) if (state.cats[i].id === id) return state.cats[i]; return null; }
+  function catsOf(kind) { return state.cats.filter(function (c) { return c.kind === kind; }); }
+  function catName(id) { var c = catById(id); return c ? c.name : String(id); }
+  function dot(id) { var c = catById(id); return '<span class="dot" style="background:' + esc(c ? c.color : '#5B675F') + '"></span>'; }
 
   /* ---------- armazenamento ---------- */
+  function normalize(d) {
+    var s = blank();
+    if (d && typeof d === 'object') {
+      if (Array.isArray(d.entries)) s.entries = d.entries;
+      if (Array.isArray(d.readings)) s.readings = d.readings;
+      if (Array.isArray(d.cats)) s.cats = d.cats;
+      if (Array.isArray(d.fixed)) s.fixed = d.fixed;
+      if (d.hours && typeof d.hours === 'object' && !Array.isArray(d.hours)) s.hours = d.hours;
+      if (Array.isArray(d.reminders)) s.reminders = d.reminders;
+      if (d.cfg && typeof d.cfg === 'object') {
+        s.cfg.mods = d.cfg.mods || {};
+        s.cfg.goals = d.cfg.goals || {};
+        s.cfg.deprec = +d.cfg.deprec || 0;
+      }
+    }
+    if (!s.cats.length) s.cats = defaultCats();
+    // lançamentos de uma categoria que não existe mais ganham uma categoria de volta
+    s.entries.forEach(function (e) {
+      if (!s.cats.some(function (c) { return c.id === e.cat; })) {
+        s.cats.push({ id: e.cat, kind: e.kind === 'ganho' ? 'ganho' : 'gasto', name: String(e.cat), color: '#5B675F' });
+      }
+    });
+    return s;
+  }
   function load() {
     try {
       var raw = localStorage.getItem(KEY);
-      if (raw) {
-        var d = JSON.parse(raw);
-        state.entries = Array.isArray(d.entries) ? d.entries : [];
-        state.readings = Array.isArray(d.readings) ? d.readings : [];
-      }
-    } catch (e) { storageOk = false; }
+      state = normalize(raw ? JSON.parse(raw) : null);
+    } catch (e) { storageOk = false; state = normalize(null); }
   }
   function save() {
     try { localStorage.setItem(KEY, JSON.stringify(state)); }
@@ -280,13 +380,30 @@ textarea { margin-top: 8px; font-size: 14px; }
   }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
+  /* ---------- gastos fixos: lança sozinho todo mês ---------- */
+  function runFixed() {
+    var today = todayISO(), cur = today.slice(0, 7), changed = false;
+    state.fixed.forEach(function (f) {
+      var m = f.next || f.start;
+      while (m <= cur) {
+        var date = m + '-' + pad(Math.min(f.day, daysIn(m)));
+        if (date > today) break;
+        state.entries.push({ id: uid(), date: date, kind: 'gasto', cat: f.cat, amount: f.amount, note: f.name, fixed: f.id });
+        m = shiftMonth(m, 1);
+        changed = true;
+      }
+      f.next = m;
+    });
+    if (changed) save();
+  }
+
   /* ---------- cálculos ---------- */
   function totals(list) {
     var g = 0, s = 0, l = 0, by = {};
     list.forEach(function (e) {
       by[e.cat] = (by[e.cat] || 0) + e.amount;
       if (e.kind === 'ganho') g += e.amount;
-      else { s += e.amount; if (e.cat === 'combustivel') l += (e.liters || 0); }
+      else { s += e.amount; l += (e.liters || 0); }
     });
     return { g: g, s: s, lit: l, lucro: g - s, by: by };
   }
@@ -296,6 +413,7 @@ textarea { margin-top: 8px; font-size: 14px; }
       return a.date < b.date ? -1 : 1;
     });
   }
+  function currentKm() { var r = sortedReadings(); return r.length ? r[r.length - 1].km : null; }
   function intervals() {
     var r = sortedReadings(), out = [];
     for (var i = 1; i < r.length; i++) {
@@ -307,10 +425,19 @@ textarea { margin-top: 8px; font-size: 14px; }
         lit: t.lit, ganhos: t.g, gastos: t.s, lucro: t.lucro,
         perL: t.lit > 0 ? t.lucro / t.lit : null,
         kmL: (t.lit > 0 && km > 0) ? km / t.lit : null,
-        perKm: km > 0 ? t.lucro / km : null
+        perKm: km > 0 ? t.lucro / km : null,
+        costKm: km > 0 ? t.s / km : null
       });
     }
     return out;
+  }
+  function goalHtml(lucro, g, label) {
+    if (!mod('metas') || !(g > 0)) return '';
+    var pct = Math.max(0, Math.min(100, lucro / g * 100));
+    var txt = lucro >= g
+      ? 'Meta ' + label + ' batida! Meta de ' + brl(g) + '.'
+      : 'Faltam ' + brl(g - lucro) + ' para a meta ' + label + ' de ' + brl(g) + '.';
+    return '<div class="goal"><div class="bar" role="progressbar" aria-valuenow="' + Math.round(pct) + '" aria-valuemin="0" aria-valuemax="100" aria-label="Meta ' + label + '"><i style="width:' + pct.toFixed(1) + '%"></i></div><p class="muted">' + txt + '</p></div>';
   }
 
   /* ---------- confirmação em dois toques ---------- */
@@ -327,133 +454,220 @@ textarea { margin-top: 8px; font-size: 14px; }
     }, 3500);
   }
 
-  /* ---------- aba Lançar ---------- */
-  function money(id, label, ph) {
-    return '<label for="' + id + '">' + label + '</label><div class="money"><span>R$</span><input id="' + id + '" inputmode="decimal" autocomplete="off" placeholder="' + ph + '"></div>';
+  /* ---------- lembretes de manutenção ---------- */
+  function remStatus(r, cur) {
+    if (cur == null) return { txt: 'Salve a quilometragem para ver quanto falta.', cls: '' };
+    var left = r.last + r.every - cur;
+    if (left < 0) return { txt: 'Passou ' + kmf(-left) + ' do prazo', cls: 'loss-text', left: left };
+    if (left <= 500) return { txt: 'Faltam ' + kmf(left) + ', está chegando', cls: 'warn', left: left };
+    return { txt: 'Faltam ' + kmf(left), cls: '', left: left };
+  }
+  function maintAlert() {
+    if (!mod('lembretes')) return '';
+    var cur = currentKm();
+    if (cur == null) return '';
+    var due = state.reminders.filter(function (r) { return r.last + r.every - cur <= 500; });
+    if (!due.length) return '';
+    return '<div class="alert" role="status">Manutenção chegando<ul>' + due.map(function (r) {
+      return '<li>' + esc(r.name) + ': ' + remStatus(r, cur).txt.toLowerCase() + '</li>';
+    }).join('') + '</ul></div>';
   }
 
+  /* ---------- aba Lançar ---------- */
+  function money(id, label, ph, cls) {
+    return '<label for="' + id + '">' + label + '</label><div class="money"><span>R$</span><input id="' + id + '" class="' + (cls || '') + '" inputmode="decimal" autocomplete="off" placeholder="' + ph + '"></div>';
+  }
+  function catOptions(sel, kinds) {
+    return [['gasto', 'Gastos'], ['ganho', 'Ganhos']].filter(function (k) { return kinds.indexOf(k[0]) > -1; }).map(function (k) {
+      return '<optgroup label="' + k[1] + '">' + catsOf(k[0]).map(function (c) {
+        return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name) + '</option>';
+      }).join('') + '</optgroup>';
+    }).join('');
+  }
+  function block(c, i) {
+    var p = 'c' + i;
+    var h = '<div class="cat" data-cat="' + esc(c.id) + '"><h3 class="cat-title">' + dot(c.id) + esc(c.name) + '</h3>';
+    if (c.fuel) {
+      h += '<div class="row2"><div>' + money(p + '-a', 'Valor pago', '50,00', 'in-amount') + '</div><div>' + money(p + '-p', 'Preço do litro', '5,00', 'in-price') + '</div></div>' +
+        '<label for="' + p + '-t">Combustível</label><select id="' + p + '-t" class="in-type"><option value="etanol">Etanol</option><option value="gasolina">Gasolina</option></select>' +
+        '<p class="calc in-liters"></p>';
+    } else {
+      h += money(p + '-a', c.kind === 'ganho' ? 'Valor recebido' : 'Valor gasto', '0,00', 'in-amount');
+      if (c.subs && c.subs.length) {
+        h += '<label for="' + p + '-s">Tipo <span class="opt">(opcional)</span></label><select id="' + p + '-s" class="in-sub"><option value="">Não informar</option>' +
+          c.subs.map(function (s) { return '<option>' + esc(s) + '</option>'; }).join('') + '</select>';
+      }
+    }
+    h += '<div class="note-wrap"><label for="' + p + '-n">Observação <span class="opt">(opcional)</span></label><input id="' + p + '-n" class="in-note" maxlength="140" autocomplete="off" placeholder="' +
+      (c.kind === 'ganho' ? 'ex.: corrida para o aeroporto' : 'ex.: troquei a pastilha dianteira') + '"></div>';
+    return h + '</div>';
+  }
+  function blockFor(id) { return $$('.cat').filter(function (b) { return b.dataset.cat === id; })[0]; }
   function viewLancar() {
-    $('#view').innerHTML =
+    if (!catById(oneCat)) oneCat = state.cats[0].id;
+    var i = 0;
+    var h = maintAlert() +
       '<div class="card"><label for="f-date" style="margin-top:0">Dia do lançamento</label><input type="date" id="f-date" value="' + formDate + '">' +
-        '<div class="modes" role="group" aria-label="Modo de lançamento"><button class="ghost" data-mode="um">Um por vez</button><button class="ghost" data-mode="tudo">Vários de uma vez</button></div></div>' +
-      '<div class="chips" id="chips" role="group" aria-label="O que você quer lançar?">' +
-        GASTOS.concat(GANHOS).map(function (c) {
-          return '<button class="chip ' + (GANHOS.indexOf(c) > -1 ? 'g' : 'l') + '" data-cat-pick="' + c + '">' + CAT_NAME[c] + '</button>';
-        }).join('') +
+      (mod('horas') ? '<label for="f-hours">Horas rodadas neste dia <span class="opt">(opcional)</span></label><input id="f-hours" inputmode="decimal" autocomplete="off" placeholder="ex.: 8,5">' : '') +
+      (editing
+        ? '<p class="editing">Editando um lançamento. <button class="link" id="cancel-edit">Cancelar edição</button></p>'
+        : '<div class="modes" role="group" aria-label="Modo de lançamento"><button class="ghost" data-mode="um">Um por vez</button><button class="ghost" data-mode="tudo">Vários de uma vez</button></div>') +
       '</div>' +
-      '<section class="group grp">' +
-        '<h2 class="grp-title">Gastos</h2>' +
-        '<div class="cat" data-cat="combustivel">' +
-          '<h3>Combustível</h3>' +
-          '<div class="row2">' +
-            '<div>' + money('f-fuel-amount', 'Valor pago', '50,00') + '</div>' +
-            '<div>' + money('f-fuel-price', 'Preço do litro', '5,00') + '</div>' +
-          '</div>' +
-          '<label for="f-fuel-type">Tipo</label>' +
-          '<select id="f-fuel-type"><option value="etanol">Etanol</option><option value="gasolina">Gasolina</option></select>' +
-          '<p class="calc" id="liters-out"></p>' +
-        '</div>' +
-        '<div class="cat" data-cat="alimentacao"><h3>Alimentação na rua</h3>' + money('f-alim', 'Valor gasto', '0,00') + '</div>' +
-        '<div class="cat" data-cat="lavagem"><h3>Lavagem</h3>' + money('f-lav', 'Valor gasto', '0,00') + '</div>' +
-      '</section>' +
-      '<section class="group gain grp">' +
-        '<h2 class="grp-title">Ganhos</h2>' +
-        '<div class="cat" data-cat="uber">' + money('f-uber', 'Ganho na Uber', '0,00') + '</div>' +
-        '<div class="cat" data-cat="99">' + money('f-99', 'Ganho na 99', '0,00') + '</div>' +
-        '<div class="cat" data-cat="particular">' + money('f-part', 'Ganho em corridas particulares', '0,00') + '</div>' +
-      '</section>' +
-      '<button class="primary" id="save-day">Salvar lançamento</button>' +
+      '<div class="card" id="pick"><label for="f-cat" style="margin-top:0">O que você quer lançar?</label><select id="f-cat">' + catOptions(oneCat, ['gasto', 'ganho']) + '</select></div>' +
+      '<section class="group grp"><h2 class="grp-title">Gastos</h2>' + catsOf('gasto').map(function (c) { return block(c, i++); }).join('') + '</section>' +
+      '<section class="group gain grp"><h2 class="grp-title">Ganhos</h2>' + catsOf('ganho').map(function (c) { return block(c, i++); }).join('') + '</section>' +
+      '<button class="primary" id="save-day">Salvar</button>' +
       '<p class="msg" id="msg" role="status"></p>' +
       '<section id="day-list"></section>';
-
-    ['#f-fuel-amount', '#f-fuel-price'].forEach(function (s) { $(s).addEventListener('input', updLiters); });
-    $('#f-fuel-type').addEventListener('change', updLiters);
-    $('#f-date').addEventListener('change', function () { formDate = $('#f-date').value || todayISO(); renderDayList(); });
+    $('#view').innerHTML = h;
+    fillHours();
+    $$('.cat').forEach(function (b) {
+      if (!b.querySelector('.in-price')) return;
+      $$('.in-amount, .in-price', b).forEach(function (x) { x.addEventListener('input', function () { updLiters(b); }); });
+      b.querySelector('.in-type').addEventListener('change', function () { updLiters(b); });
+      updLiters(b);
+    });
+    $('#f-date').addEventListener('change', function () { formDate = $('#f-date').value || todayISO(); fillHours(); renderDayList(); });
+    $('#f-cat').addEventListener('change', function () { oneCat = $('#f-cat').value; applyMode(); });
     $('#save-day').addEventListener('click', saveDay);
-    document.querySelectorAll('[data-mode]').forEach(function (b) {
+    if (editing) $('#cancel-edit').addEventListener('click', function () { editing = null; viewLancar(); });
+    $$('[data-mode]').forEach(function (b) {
       b.addEventListener('click', function () { mode = b.dataset.mode; applyMode(); });
     });
-    document.querySelectorAll('[data-cat-pick]').forEach(function (b) {
-      b.addEventListener('click', function () { oneCat = b.dataset.catPick; applyMode(); });
-    });
     applyMode();
-    updLiters();
     renderDayList();
   }
-
+  function fillHours() {
+    var f = $('#f-hours');
+    if (f) f.value = state.hours[formDate] != null ? String(state.hours[formDate]).replace('.', ',') : '';
+  }
   function applyMode() {
-    var um = mode === 'um';
-    document.querySelectorAll('[data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
-    $('#chips').hidden = !um;
-    document.querySelectorAll('[data-cat-pick]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.catPick === oneCat)); });
-    document.querySelectorAll('.cat').forEach(function (c) { c.hidden = um && c.dataset.cat !== oneCat; });
-    document.querySelectorAll('.grp').forEach(function (g) {
-      g.hidden = um && !g.querySelector('.cat[data-cat="' + oneCat + '"]');
+    var um = mode === 'um' || !!editing;
+    $$('[data-mode]').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.mode === mode)); });
+    $('#pick').hidden = !um;
+    $$('.cat').forEach(function (c) { c.hidden = um && c.dataset.cat !== oneCat; });
+    $$('.grp').forEach(function (g) {
+      g.hidden = um && !g.querySelector('.cat:not([hidden])');
       g.querySelector('.grp-title').hidden = um;
     });
-    $('#save-day').textContent = um ? 'Salvar lançamento' : 'Salvar tudo';
+    $$('.cat-title').forEach(function (t) { t.hidden = um; });
+    $$('.note-wrap').forEach(function (n) { n.hidden = !um; });
+    $('#save-day').textContent = editing ? 'Salvar alteração' : um ? 'Salvar lançamento' : 'Salvar tudo';
   }
-
-  function updLiters() {
-    var a = num($('#f-fuel-amount').value), p = num($('#f-fuel-price').value);
-    var type = $('#f-fuel-type').value;
-    $('#liters-out').innerHTML = (a > 0 && p > 0)
-      ? 'Entraram <span class="num">' + lit(a / p) + '</span> de ' + type
+  function updLiters(b) {
+    var a = num(b.querySelector('.in-amount').value), p = num(b.querySelector('.in-price').value);
+    b.querySelector('.in-liters').innerHTML = (a > 0 && p > 0)
+      ? 'Entraram <span class="num">' + lit(a / p) + '</span> de ' + b.querySelector('.in-type').value
       : 'Preencha o valor pago e o preço do litro para ver quantos litros entraram.';
   }
-
   function saveDay() {
     var msg = $('#msg'), date = $('#f-date').value;
     if (!date) { say(msg, 'Escolha o dia do lançamento.', true); return; }
     var add = [];
-    var aTxt = $('#f-fuel-amount').value.trim(), pTxt = $('#f-fuel-price').value.trim();
-    var fuelOn = !$('.cat[data-cat="combustivel"]').hidden;
-    if (fuelOn && (aTxt || pTxt)) {
-      var fa = num(aTxt), fp = num(pTxt);
-      if (!(fa > 0 && fp > 0)) { say(msg, 'No combustível, informe o valor pago e o preço do litro.', true); return; }
-      add.push({ kind: 'gasto', cat: 'combustivel', amount: fa, price: fp, liters: fa / fp, fuel: $('#f-fuel-type').value });
+    var blocks = $$('.cat').filter(function (b) { return !b.hidden; });
+    for (var i = 0; i < blocks.length; i++) {
+      var b = blocks[i], c = catById(b.dataset.cat), e;
+      var aTxt = b.querySelector('.in-amount').value.trim();
+      if (c.fuel) {
+        var pTxt = b.querySelector('.in-price').value.trim();
+        if (!aTxt && !pTxt) continue;
+        var fa = num(aTxt), fp = num(pTxt);
+        if (!(fa > 0 && fp > 0)) { say(msg, 'Em ' + c.name + ', informe o valor pago e o preço do litro.', true); return; }
+        e = { kind: 'gasto', cat: c.id, amount: fa, price: fp, liters: fa / fp, fuel: b.querySelector('.in-type').value };
+      } else {
+        if (!aTxt) continue;
+        var n = num(aTxt);
+        if (!(n > 0)) { say(msg, 'Valor inválido em ' + c.name + '.', true); return; }
+        e = { kind: c.kind, cat: c.id, amount: n };
+        var sub = b.querySelector('.in-sub');
+        if (sub && sub.value) e.sub = sub.value;
+      }
+      var note = b.querySelector('.in-note');
+      if (note && !note.closest('[hidden]') && note.value.trim()) e.note = note.value.trim();
+      add.push(e);
     }
-    for (var i = 0; i < SIMPLE.length; i++) {
-      var f = SIMPLE[i], txt = $('#' + f[0]).value.trim();
-      if (!txt || $('#' + f[0]).closest('.cat').hidden) continue;
-      var n = num(txt);
-      if (!(n > 0)) { say(msg, 'Valor inválido em ' + CAT_NAME[f[2]] + '.', true); return; }
-      add.push({ kind: f[1], cat: f[2], amount: n });
+    var hoursChanged = false, newHours = null;
+    var hf = $('#f-hours');
+    if (hf) {
+      var hTxt = hf.value.trim(), prev = state.hours[date];
+      if (hTxt) {
+        newHours = num(hTxt);
+        if (!(newHours > 0 && newHours <= 24)) { say(msg, 'Horas rodadas: use um número de 0 a 24, por exemplo 8,5.', true); return; }
+        hoursChanged = newHours !== prev;
+      } else if (prev != null) hoursChanged = true;
     }
-    if (!add.length) { say(msg, 'Preencha pelo menos um campo.', true); return; }
-    add.forEach(function (e) { e.id = uid(); e.date = date; state.entries.push(e); });
+    if (editing) {
+      if (add.length !== 1) { say(msg, 'Preencha o valor do lançamento.', true); return; }
+      var idx = -1;
+      state.entries.forEach(function (x, k) { if (x.id === editing) idx = k; });
+      if (idx > -1) {
+        var old = state.entries[idx];
+        add[0].id = old.id; add[0].date = date;
+        if (old.fixed) add[0].fixed = old.fixed;
+        state.entries[idx] = add[0];
+      }
+    } else {
+      if (!add.length && !hoursChanged) { say(msg, 'Preencha pelo menos um campo.', true); return; }
+      add.forEach(function (x) { x.id = uid(); x.date = date; state.entries.push(x); });
+    }
+    if (hoursChanged) { if (newHours == null) delete state.hours[date]; else state.hours[date] = newHours; }
     save();
-    ['#f-fuel-amount', '#f-fuel-price', '#f-alim', '#f-lav', '#f-uber', '#f-99', '#f-part'].forEach(function (s) { $(s).value = ''; });
+    var wasEditing = !!editing;
+    editing = null;
     formDate = date;
-    updLiters();
-    renderDayList();
-    var t = totals(state.entries.filter(function (e) { return e.date === date; }));
-    say(msg, 'Salvo. Lucro de ' + dm(date) + ': ' + brl(t.lucro), false);
+    viewLancar();
+    var t = totals(state.entries.filter(function (x) { return x.date === date; }));
+    say($('#msg'), (wasEditing ? 'Alteração salva.' : 'Salvo.') + ' Lucro de ' + dm(date) + ': ' + brl(t.lucro), false);
   }
-
-  function entryLabel(e) {
-    if (e.cat === 'combustivel') {
-      return 'Combustível' + (e.fuel ? ' (' + e.fuel + ')' : '') + '<span class="sub">' + lit(e.liters || 0) + ' a ' + brl(e.price || 0) + ' o litro</span>';
+  function startEdit(id) {
+    var e = state.entries.filter(function (x) { return x.id === id; })[0];
+    if (!e) return;
+    editing = id; formDate = e.date; oneCat = e.cat; tab = 'lancar';
+    render();
+    var b = blockFor(e.cat);
+    if (!b) return;
+    b.querySelector('.in-amount').value = inNum(e.amount);
+    if (b.querySelector('.in-price')) {
+      b.querySelector('.in-price').value = inNum(e.price, 3);
+      if (e.fuel) b.querySelector('.in-type').value = e.fuel;
+      updLiters(b);
     }
-    return CAT_NAME[e.cat] || e.cat;
+    var sub = b.querySelector('.in-sub');
+    if (sub && e.sub) {
+      if (!$$('option', sub).some(function (o) { return o.value === e.sub; })) {
+        var o = document.createElement('option'); o.textContent = e.sub; sub.appendChild(o);
+      }
+      sub.value = e.sub;
+    }
+    b.querySelector('.in-note').value = e.note || '';
   }
-
+  function entryLabel(e) {
+    var main = esc(catName(e.cat)) + (e.sub ? ' · ' + esc(e.sub) : '');
+    var subs = [];
+    if (e.liters) subs.push((e.fuel ? esc(e.fuel) + ', ' : '') + lit(e.liters) + ' a ' + brl(e.price || 0) + ' o litro');
+    if (e.fixed) subs.push('gasto fixo');
+    if (e.note) subs.push(esc(e.note));
+    return main + (subs.length ? '<span class="sub">' + subs.join(' · ') + '</span>' : '');
+  }
   function renderDayList() {
     var box = $('#day-list');
     if (!box) return;
     var list = state.entries.filter(function (e) { return e.date === formDate; });
-    if (!list.length) {
+    var h = mod('horas') ? state.hours[formDate] : null;
+    if (!list.length && !h) {
       box.innerHTML = '<p class="empty">Nada lançado em ' + dmy(formDate) + ' ainda.</p>';
       return;
     }
     var t = totals(list);
     box.innerHTML =
       '<div class="card"><div class="group-head"><h2>Lançado em ' + dmy(formDate) + '</h2><span class="num ' + sign(t.lucro) + '">' + brl(t.lucro) + '</span></div>' +
-      '<p class="muted">Ganhos ' + brl(t.g) + ' e gastos ' + brl(t.s) + '</p>' +
-      '<ul class="rows">' + list.map(function (e) {
-        return '<li><span>' + entryLabel(e) + '</span><span><span class="num ' + (e.kind === 'ganho' ? 'gain-text' : 'loss-text') + '">' +
-          (e.kind === 'ganho' ? '+' : '−') + brl(e.amount) + '</span> <button class="link" data-del-entry="' + e.id + '">Apagar</button></span></li>';
-      }).join('') + '</ul></div>';
+      '<p class="muted">Ganhos ' + brl(t.g) + ' e gastos ' + brl(t.s) +
+        (h ? '. ' + hrs(h) + ' rodadas, ' + brl(t.lucro / h) + ' de lucro por hora' : '') + '</p>' +
+      goalHtml(t.lucro, goal('dia'), 'do dia') +
+      (list.length ? '<ul class="rows">' + list.map(function (e) {
+        return '<li' + (e.id === editing ? ' class="is-editing"' : '') + '><span>' + dot(e.cat) + '</span><span style="flex:1">' + entryLabel(e) + '</span><span class="row-end"><span class="num ' + (e.kind === 'ganho' ? 'gain-text' : 'loss-text') + '">' +
+          (e.kind === 'ganho' ? '+' : '−') + brl(e.amount) + '</span><span class="row-btns"><button class="link plain" data-edit-entry="' + e.id + '">Editar</button><button class="link" data-del-entry="' + e.id + '">Apagar</button></span></span></li>';
+      }).join('') + '</ul>' : '') + '</div>';
   }
 
   /* ---------- aba Km ---------- */
@@ -470,11 +684,12 @@ textarea { margin-top: 8px; font-size: 14px; }
         '<p class="msg" id="kmsg" role="status"></p>' +
       '</div>' +
       '<section id="km-result"></section>' +
+      (mod('lembretes') ? '<section id="km-rem"></section>' : '') +
       '<section id="km-hist"></section>';
     $('#save-km').addEventListener('click', saveKm);
     renderKm();
+    renderRem();
   }
-
   function saveKm() {
     var msg = $('#kmsg'), n = num($('#k-km').value), date = $('#k-date').value;
     if (!(n > 0) || !date) { say(msg, 'Informe a quilometragem e a data.', true); return; }
@@ -494,8 +709,8 @@ textarea { margin-top: 8px; font-size: 14px; }
     $('#k-km').value = '';
     say(msg, 'Quilometragem salva.', false);
     renderKm();
+    renderRem();
   }
-
   function renderKm() {
     var iv = intervals(), last = iv[iv.length - 1], res = $('#km-result');
     if (!state.readings.length) {
@@ -514,13 +729,13 @@ textarea { margin-top: 8px; font-size: 14px; }
           '<div><dt>Litros abastecidos</dt><dd>' + (last.lit > 0 ? lit(last.lit) : '–') + '</dd></div>' +
           '<div><dt>Consumo</dt><dd>' + (last.kmL == null ? '–' : dec1(last.kmL) + ' km/L') + '</dd></div>' +
           '<div><dt>Lucro por km</dt><dd>' + (last.perKm == null ? '–' : brl(last.perKm)) + '</dd></div>' +
+          (mod('custokm') ? '<div><dt>Custo por km</dt><dd class="loss-text">' + (last.costKm == null ? '–' : brl(last.costKm)) + '</dd></div>' : '') +
           '<div><dt>Ganhos</dt><dd class="gain-text">' + brl(last.ganhos) + '</dd></div>' +
           '<div><dt>Gastos</dt><dd class="loss-text">' + brl(last.gastos) + '</dd></div>' +
           '<div><dt>Lucro real do período</dt><dd class="' + sign(last.lucro) + '">' + brl(last.lucro) + '</dd></div>' +
         '</dl>' +
         '<p class="muted">Os litros são os que você abasteceu entre as duas leituras. Fica mais exato se o tanque estiver no mesmo nível nas duas, por exemplo logo depois de abastecer.</p></div>';
     }
-
     var r = sortedReadings().reverse(), hist = $('#km-hist');
     if (!r.length) { hist.innerHTML = ''; return; }
     var byId = {};
@@ -532,8 +747,42 @@ textarea { margin-top: 8px; font-size: 14px; }
         '</span> <button class="link" data-del-reading="' + x.id + '">Apagar</button></span></li>';
     }).join('') + '</ul></div>';
   }
+  function renderRem() {
+    var box = $('#km-rem');
+    if (!box) return;
+    var cur = currentKm();
+    box.innerHTML = '<div class="card"><h2>Lembretes de manutenção</h2>' +
+      (state.reminders.length
+        ? '<ul class="rows">' + state.reminders.map(function (r) {
+            var st = remStatus(r, cur);
+            return '<li><span>' + esc(r.name) +
+              '<span class="sub">a cada ' + kmf(r.every) + ', a última foi em ' + kmf(r.last) + '</span>' +
+              '<span class="sub ' + st.cls + '">' + st.txt + '</span></span>' +
+              '<span class="row-end">' + (cur != null ? '<button class="ghost sm" data-rem-done="' + r.id + '">Fiz agora</button>' : '') +
+              '<button class="link" data-rem-del="' + r.id + '">Apagar</button></span></li>';
+          }).join('') + '</ul>'
+        : '<p class="muted">Nenhum lembrete ainda. Exemplo: troca de óleo a cada 10.000 km.</p>') +
+      '<details class="inner"' + (state.reminders.length ? '' : ' open') + '><summary>Novo lembrete</summary>' +
+        '<label for="r-name">O que fazer</label><input id="r-name" maxlength="60" autocomplete="off" placeholder="ex.: Troca de óleo">' +
+        '<div class="row2"><div><label for="r-every">A cada quantos km</label><input id="r-every" inputmode="numeric" autocomplete="off" placeholder="10000"></div>' +
+        '<div><label for="r-last">Última vez feita no km</label><input id="r-last" inputmode="numeric" autocomplete="off" placeholder="' + (cur != null ? cur : 'ex.: 80000') + '"></div></div>' +
+        (cur != null ? '<p class="help">Deixe a última vez vazia para contar a partir de agora (' + kmf(cur) + ').</p>' : '') +
+        '<button class="primary" id="r-add">Salvar lembrete</button><p class="msg" id="r-msg" role="status"></p>' +
+      '</details></div>';
+    $('#r-add').addEventListener('click', function () {
+      var msg = $('#r-msg'), name = $('#r-name').value.trim(), every = num($('#r-every').value), lTxt = $('#r-last').value.trim();
+      var last = lTxt ? num(lTxt) : cur;
+      if (!name) { say(msg, 'Diga o que precisa ser feito.', true); return; }
+      if (!(every > 0)) { say(msg, 'Informe de quantos em quantos km.', true); return; }
+      if (last == null || !(last >= 0)) { say(msg, 'Informe em que km foi feita a última vez.', true); return; }
+      state.reminders.push({ id: uid(), name: name, every: Math.round(every), last: Math.round(last) });
+      save();
+      renderRem();
+      say($('#r-msg'), 'Lembrete salvo.', false);
+    });
+  }
 
-  /* ---------- aba Mês ---------- */
+  /* ---------- aba Resumo ---------- */
   function monthLabel(m) {
     var y = +m.slice(0, 4), mo = +m.slice(5, 7);
     return new Date(y, mo - 1, 1).toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' });
@@ -541,78 +790,326 @@ textarea { margin-top: 8px; font-size: 14px; }
   function shiftMonth(m, d) {
     var y = +m.slice(0, 4), mo = +m.slice(5, 7) - 1 + d;
     var dt = new Date(y, mo, 1);
-    return dt.getFullYear() + '-' + String(dt.getMonth() + 1).padStart(2, '0');
+    return dt.getFullYear() + '-' + pad(dt.getMonth() + 1);
   }
-
-  function viewMes() {
-    var list = state.entries.filter(function (e) { return e.date.indexOf(month) === 0; });
+  function rangeNow() {
+    if (per === 'semana') {
+      var end = addDays(weekStart, 6);
+      return { start: weekStart, end: end, label: dm(weekStart) + ' a ' + dm(end), goal: goal('semana'), goalLbl: 'da semana', name: 'da semana', dep: 7 / 30 };
+    }
+    return { start: month + '-01', end: month + '-' + pad(daysIn(month)), label: monthLabel(month), goal: goal('mes'), goalLbl: 'do mês', name: 'do mês', dep: 1 };
+  }
+  function chartDays(R, days) {
+    var keys = [];
+    for (var d = R.start; d <= R.end; d = addDays(d, 1)) keys.push(d);
+    var vals = keys.map(function (k) { return days[k] ? days[k].g - days[k].s : 0; });
+    if (!vals.some(function (v) { return v; })) return '<p class="muted">Nenhum lançamento no período.</p>';
+    var max = Math.max.apply(null, vals.map(Math.abs).concat([1]));
+    var hasNeg = vals.some(function (v) { return v < 0; });
+    var W = 320, H = 150, top = 6, ch = H - top - 18;
+    var scale = (hasNeg ? ch / 2 : ch) / max, zero = hasNeg ? top + ch / 2 : top + ch;
+    var bw = W / keys.length, gap = Math.max(1, bw * 0.15);
+    var wk = ['seg', 'ter', 'qua', 'qui', 'sex', 'sáb', 'dom'];
+    var out = '';
+    keys.forEach(function (k, i) {
+      var v = vals[i], h = Math.max(v ? 1 : 0, Math.abs(v) * scale);
+      out += '<rect class="' + (v < 0 ? 'b-loss' : 'b-gain') + '" x="' + (i * bw + gap / 2).toFixed(1) + '" y="' + (v < 0 ? zero : zero - h).toFixed(1) +
+        '" width="' + (bw - gap).toFixed(1) + '" height="' + h.toFixed(1) + '"><title>' + dm(k) + ': ' + brl(v) + '</title></rect>';
+      if (keys.length <= 7 || i === 0 || (i + 1) % 5 === 0) {
+        out += '<text x="' + (i * bw + bw / 2).toFixed(1) + '" y="' + (H - 4) + '" text-anchor="middle">' + (keys.length <= 7 ? wk[i] : +k.slice(8)) + '</text>';
+      }
+    });
+    return '<svg class="chart" viewBox="0 0 ' + W + ' ' + H + '" role="img" aria-label="Lucro por dia">' +
+      '<line class="axis" x1="0" x2="' + W + '" y1="' + zero.toFixed(1) + '" y2="' + zero.toFixed(1) + '"></line>' + out + '</svg>';
+  }
+  function chartCats(t) {
+    var list = catsOf('gasto').map(function (c) { return { c: c, v: t.by[c.id] || 0 }; })
+      .filter(function (x) { return x.v > 0; }).sort(function (a, b) { return b.v - a.v; });
+    if (!list.length) return '<p class="muted">Nenhum gasto no período.</p>';
+    var max = list[0].v;
+    return list.map(function (x) {
+      return '<div class="hbar"><div class="hbar-top"><span>' + dot(x.c.id) + esc(x.c.name) + '</span><span class="num">' + brl(x.v) +
+        ' <span class="muted">' + Math.round(x.v / t.s * 100) + '%</span></span></div><div class="bar"><i style="width:' + (x.v / max * 100).toFixed(1) + '%;background:' + esc(x.c.color) + '"></i></div></div>';
+    }).join('');
+  }
+  function viewResumo() {
+    if (!mod('semana')) per = 'mes';
+    var R = rangeNow();
+    var list = state.entries.filter(function (e) { return e.date >= R.start && e.date <= R.end; });
     var t = totals(list);
     var perL = t.lit > 0 ? t.lucro / t.lit : null;
-
-    var r = sortedReadings(), startR = null, endR = null, mStart = month + '-01', mEnd = month + '-31';
-    r.forEach(function (x) { if (x.date < mStart) startR = x; });
-    if (!startR) { for (var i = 0; i < r.length; i++) { if (r[i].date >= mStart && r[i].date <= mEnd) { startR = r[i]; break; } } }
-    r.forEach(function (x) { if (x.date <= mEnd) endR = x; });
+    var r = sortedReadings(), startR = null, endR = null;
+    r.forEach(function (x) { if (x.date < R.start) startR = x; });
+    if (!startR) { for (var i = 0; i < r.length; i++) { if (r[i].date >= R.start && r[i].date <= R.end) { startR = r[i]; break; } } }
+    r.forEach(function (x) { if (x.date <= R.end) endR = x; });
     var km = (startR && endR && endR.km > startR.km) ? endR.km - startR.km : null;
-
     var days = {};
     list.forEach(function (e) {
       var d = days[e.date] || (days[e.date] = { g: 0, s: 0 });
       if (e.kind === 'ganho') d.g += e.amount; else d.s += e.amount;
     });
+    var useH = mod('horas'), hTot = 0;
+    if (useH) Object.keys(state.hours).forEach(function (k) {
+      if (k >= R.start && k <= R.end) { hTot += +state.hours[k] || 0; if (!days[k]) days[k] = { g: 0, s: 0 }; }
+    });
     var dayKeys = Object.keys(days).sort().reverse();
-
-    function rowsFor(cats, kind) {
-      return '<ul class="rows">' + cats.map(function (c) {
-        return '<li><span>' + CAT_NAME[c] + '</span><span class="num">' + brl(t.by[c] || 0) + '</span></li>';
+    var dep = mod('custokm') ? (state.cfg.deprec || 0) * R.dep : 0;
+    function rowsFor(kind) {
+      return '<ul class="rows">' + catsOf(kind).map(function (c) {
+        return '<li><span>' + dot(c.id) + esc(c.name) + '</span><span class="num">' + brl(t.by[c.id] || 0) + '</span></li>';
       }).join('') + '</ul>';
     }
-
     $('#view').innerHTML =
-      '<div class="monthnav"><button class="ghost" id="m-prev" aria-label="Mês anterior">‹</button><strong>' + monthLabel(month) +
-        '</strong><button class="ghost" id="m-next" aria-label="Próximo mês">›</button></div>' +
+      (mod('semana') ? '<div class="modes seg" role="group" aria-label="Período"><button class="ghost" data-per="semana" aria-pressed="' + (per === 'semana') + '">Semana</button><button class="ghost" data-per="mes" aria-pressed="' + (per === 'mes') + '">Mês</button></div>' : '') +
+      '<div class="monthnav"><button class="ghost" id="m-prev" aria-label="Período anterior">‹</button><strong>' + R.label +
+        '</strong><button class="ghost" id="m-next" aria-label="Próximo período">›</button></div>' +
       '<section class="hero ' + (t.lucro < 0 ? 'neg' : 'pos') + '">' +
         '<div class="num big">' + brl(t.lucro) + '</div>' +
-        '<p>Lucro real do mês, já descontados todos os gastos</p>' +
+        '<p>Lucro real ' + R.name + ', já descontados todos os gastos</p>' +
         '<div class="num mid">' + (perL == null ? '–' : brl(perL)) + '</div>' +
-        '<p>Lucro por litro abastecido no mês</p>' +
+        '<p>Lucro por litro abastecido</p>' +
+        goalHtml(t.lucro, R.goal, R.goalLbl) +
       '</section>' +
-      '<section class="group gain"><div class="group-head"><h2>Ganhos</h2><span class="num gain-text">' + brl(t.g) + '</span></div>' + rowsFor(GANHOS) + '</section>' +
-      '<section class="group"><div class="group-head"><h2>Gastos</h2><span class="num loss-text">' + brl(t.s) + '</span></div>' + rowsFor(GASTOS) + '</section>' +
+      '<section class="group gain"><div class="group-head"><h2>Ganhos</h2><span class="num gain-text">' + brl(t.g) + '</span></div>' + rowsFor('ganho') + '</section>' +
+      '<section class="group"><div class="group-head"><h2>Gastos</h2><span class="num loss-text">' + brl(t.s) + '</span></div>' + rowsFor('gasto') + '</section>' +
+      (useH ? '<section class="card"><h2>Horas trabalhadas</h2><dl class="facts">' +
+        '<div><dt>Horas rodadas</dt><dd>' + (hTot ? hrs(hTot) : '–') + '</dd></div>' +
+        '<div><dt>Lucro por hora</dt><dd class="' + sign(t.lucro) + '">' + (hTot ? brl(t.lucro / hTot) : '–') + '</dd></div>' +
+        '<div><dt>Ganho por hora</dt><dd>' + (hTot ? brl(t.g / hTot) : '–') + '</dd></div>' +
+        '</dl>' + (hTot ? '' : '<p class="muted">Anote as horas rodadas na aba Lançar.</p>') + '</section>' : '') +
       '<section class="card"><h2>Combustível e quilometragem</h2><dl class="facts">' +
         '<div><dt>Litros abastecidos</dt><dd>' + (t.lit > 0 ? lit(t.lit) : '–') + '</dd></div>' +
-        '<div><dt>Preço médio do litro</dt><dd>' + (t.lit > 0 ? brl((t.by.combustivel || 0) / t.lit) : '–') + '</dd></div>' +
+        '<div><dt>Preço médio do litro</dt><dd>' + (t.lit > 0 ? brl(fuelSpend(t) / t.lit) : '–') + '</dd></div>' +
         '<div><dt>Km rodados</dt><dd>' + (km ? kmf(km) : '–') + '</dd></div>' +
         '<div><dt>Consumo estimado</dt><dd>' + (km && t.lit > 0 ? dec1(km / t.lit) + ' km/L' : '–') + '</dd></div>' +
         '<div><dt>Lucro por km</dt><dd>' + (km ? brl(t.lucro / km) : '–') + '</dd></div>' +
+        (mod('custokm') ? '<div><dt>Custo por km</dt><dd class="loss-text">' + (km ? brl((t.s + dep) / km) : '–') + '</dd></div>' +
+          '<div><dt>Ganho por km</dt><dd class="gain-text">' + (km ? brl(t.g / km) : '–') + '</dd></div>' : '') +
       '</dl>' +
-      (km ? '<p class="muted">Km pelas leituras de ' + dm(startR.date) + ' a ' + dm(endR.date) + '.</p>' : '<p class="muted">Salve leituras de quilometragem na aba Km para ver esses números.</p>') +
+      (km ? '<p class="muted">Km pelas leituras de ' + dm(startR.date) + ' a ' + dm(endR.date) + '.' +
+          (dep > 0 ? ' O custo por km inclui ' + brl(dep) + ' de depreciação do carro.' : '') + '</p>'
+        : '<p class="muted">Salve leituras de quilometragem na aba Km para ver esses números.</p>') +
       '</section>' +
+      (mod('graficos') ? '<section class="card"><h2>Lucro por dia</h2>' + chartDays(R, days) + '</section>' +
+        '<section class="card"><h2>Gastos por categoria</h2>' + chartCats(t) + '</section>' : '') +
       '<section class="card"><h2>Dia a dia</h2>' +
       (dayKeys.length
-        ? '<div class="scroll"><table><thead><tr><th>Dia</th><th>Ganhos</th><th>Gastos</th><th>Lucro</th></tr></thead><tbody>' +
+        ? '<div class="scroll"><table><thead><tr><th>Dia</th><th>Ganhos</th><th>Gastos</th><th>Lucro</th>' + (useH ? '<th>Por hora</th>' : '') + '</tr></thead><tbody>' +
           dayKeys.map(function (k) {
-            var d = days[k], l = d.g - d.s;
-            return '<tr><td>' + dm(k) + '</td><td class="num">' + brl(d.g) + '</td><td class="num">' + brl(d.s) + '</td><td class="num ' + sign(l) + '">' + brl(l) + '</td></tr>';
+            var d = days[k], l = d.g - d.s, h = useH ? +state.hours[k] || 0 : 0;
+            return '<tr><td>' + dm(k) + '</td><td class="num">' + brl(d.g) + '</td><td class="num">' + brl(d.s) + '</td><td class="num ' + sign(l) + '">' + brl(l) + '</td>' +
+              (useH ? '<td class="num">' + (h ? brl(l / h) : '–') + '</td>' : '') + '</tr>';
           }).join('') + '</tbody></table></div>'
-        : '<p class="muted">Nenhum lançamento neste mês.</p>') +
-      '</section>' +
-      '<details><summary>Backup dos dados</summary>' +
+        : '<p class="muted">Nenhum lançamento neste período.</p>') +
+      '</section>';
+    $('#m-prev').addEventListener('click', function () { shiftPeriod(-1); });
+    $('#m-next').addEventListener('click', function () { shiftPeriod(1); });
+    $$('[data-per]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        per = b.dataset.per;
+        // ao trocar, leva a semana/mês para o período equivalente
+        if (per === 'semana') weekStart = mondayOf(month === todayISO().slice(0, 7) ? todayISO() : month + '-01');
+        else month = weekStart.slice(0, 7);
+        viewResumo();
+      });
+    });
+  }
+  function fuelSpend(t) {
+    return state.cats.filter(function (c) { return c.fuel; }).reduce(function (s, c) { return s + (t.by[c.id] || 0); }, 0);
+  }
+  function shiftPeriod(d) {
+    if (per === 'semana') weekStart = addDays(weekStart, 7 * d);
+    else month = shiftMonth(month, d);
+    viewResumo();
+  }
+
+  /* ---------- aba Ajustes ---------- */
+  function usage(id) {
+    return state.entries.filter(function (e) { return e.cat === id; }).length;
+  }
+  function catForm(c, kind) {
+    kind = c ? c.kind : kind;
+    var used = state.cats.map(function (x) { return x.color; });
+    var color = c ? c.color : (COLORS.filter(function (x) { return used.indexOf(x) < 0; })[0] || COLORS[0]);
+    var others = catsOf(kind).filter(function (x) { return !c || x.id !== c.id; });
+    var n = c ? usage(c.id) : 0;
+    var h = '<label for="cf-name"' + (c ? ' style="margin-top:0"' : '') + '>Nome da categoria</label><input id="cf-name" maxlength="40" autocomplete="off" value="' + esc(c ? c.name : '') + '" placeholder="' + (kind === 'ganho' ? 'ex.: iFood' : 'ex.: Seguro') + '">' +
+      '<label>Cor</label><div class="swatches" role="radiogroup" aria-label="Cor">' + COLORS.map(function (col) {
+        return '<label class="sw"><input type="radio" name="cf-color" value="' + col + '"' + (col === color ? ' checked' : '') + ' aria-label="Cor ' + col + '"><span style="background:' + col + '"></span></label>';
+      }).join('') + '</div>';
+    if (!(c && c.fuel)) {
+      h += '<label for="cf-subs">Tipos <span class="opt">(opcional)</span></label><input id="cf-subs" autocomplete="off" value="' + esc(c && c.subs ? c.subs.join(', ') : '') + '" placeholder="ex.: Troca de óleo, Pneus, Freios">' +
+        '<p class="help">Separe por vírgula. Aparecem numa segunda caixinha na hora de lançar.</p>';
+    }
+    h += '<div class="btns"><button class="primary" id="cf-save" style="flex:1">Salvar</button><button class="ghost" id="cf-cancel">Cancelar</button></div>';
+    if (c && c.fuel) h += '<p class="help">Esta é a categoria que calcula os litros, por isso não pode ser excluída.</p>';
+    else if (c && !others.length) h += '<p class="help">É a única categoria de ' + kind + ', por isso não pode ser excluída.</p>';
+    else if (c) {
+      h += n
+        ? '<p class="help">Essa categoria tem ' + n + ' lançamento' + (n > 1 ? 's' : '') + '. Para excluir, escolha para onde ' + (n > 1 ? 'eles vão' : 'ele vai') + ':</p>' +
+          '<select id="cf-move" aria-label="Mover lançamentos para">' + others.slice().sort(function (a, b) { return (a.fuel ? 1 : 0) - (b.fuel ? 1 : 0); }).map(function (x) { return '<option value="' + esc(x.id) + '">' + esc(x.name) + '</option>'; }).join('') + '</select>' +
+          '<button class="link" id="cf-del">Excluir e mover os lançamentos</button>'
+        : '<button class="link" id="cf-del">Excluir categoria</button>';
+    }
+    return h + '<p class="msg" id="cf-msg" role="status"></p>';
+  }
+  function catList(kind, title) {
+    var h = '<h3>' + title + '</h3><ul class="rows">' + catsOf(kind).map(function (c) {
+      if (catEdit === c.id) return '<li class="form-li">' + catForm(c) + '</li>';
+      return '<li><span>' + dot(c.id) + '</span><span style="flex:1">' + esc(c.name) +
+        (c.subs && c.subs.length ? '<span class="sub">' + c.subs.map(esc).join(', ') + '</span>' : '') +
+        (c.fuel ? '<span class="sub">calcula os litros</span>' : '') +
+        '</span><button class="ghost sm" data-cat-edit="' + esc(c.id) + '">Editar</button></li>';
+    }).join('') + '</ul>';
+    if (catEdit === 'new:' + kind) h += '<details class="inner" open><summary>Nova categoria de ' + kind + '</summary>' + catForm(null, kind) + '</details>';
+    else h += '<button class="ghost add" data-cat-new="' + kind + '">+ Nova categoria de ' + kind + '</button>';
+    return h;
+  }
+  function viewAjustes() {
+    var fixos = state.fixed.slice().sort(function (a, b) { return a.day - b.day; });
+    var h =
+      '<div class="card" id="sec-cats"><h2>Categorias</h2><p class="muted">Crie, renomeie, mude a cor ou exclua. Elas aparecem na caixinha da aba Lançar.</p>' +
+        catList('gasto', 'Gastos') + catList('ganho', 'Ganhos') + '</div>' +
+      '<div class="card"><h2>Gastos fixos</h2>' +
+        '<p class="muted">Parcela ou aluguel do carro, seguro, IPVA, celular… Cadastre uma vez e o app lança sozinho todo mês, no dia que você escolher. Para IPVA e seguro, use o valor da parcela.</p>' +
+        (fixos.length ? '<ul class="rows">' + fixos.map(function (f) {
+          return '<li><span>' + dot(f.cat) + '</span><span style="flex:1">' + esc(f.name) + '<span class="sub">todo dia ' + f.day + ', em ' + esc(catName(f.cat)) + '</span></span>' +
+            '<span class="row-end"><span class="num loss-text">' + brl(f.amount) + '</span><button class="link" data-fixed-del="' + f.id + '">Apagar</button></span></li>';
+        }).join('') + '</ul>' : '') +
+        '<details class="inner"><summary>Adicionar gasto fixo</summary>' +
+          '<label for="fx-name">Nome</label><input id="fx-name" maxlength="40" autocomplete="off" placeholder="ex.: Parcela do carro">' +
+          '<div class="row2"><div>' + money('fx-amount', 'Valor por mês', '0,00') + '</div>' +
+          '<div><label for="fx-day">Dia do mês</label><input id="fx-day" inputmode="numeric" autocomplete="off" placeholder="ex.: 10"></div></div>' +
+          '<label for="fx-cat">Categoria</label><select id="fx-cat">' + catOptions(catById('fixos') ? 'fixos' : '', ['gasto']) + '</select>' +
+          '<button class="primary" id="fx-add">Salvar gasto fixo</button><p class="msg" id="fx-msg" role="status"></p>' +
+        '</details>' +
+      '</div>' +
+      '<div class="card"><h2>Recursos opcionais</h2><p class="muted">Ligue só o que você for usar. Tudo começa desligado para o app ficar simples.</p>' +
+        MODULES.map(function (m) {
+          var on = mod(m[0]), extra = '';
+          if (on && m[0] === 'metas') {
+            extra = '<div class="mod-extra">' +
+              money('g-dia', 'Meta de lucro do dia', '0,00', 'goal-in') +
+              money('g-semana', 'Meta de lucro da semana', '0,00', 'goal-in') +
+              money('g-mes', 'Meta de lucro do mês', '0,00', 'goal-in') +
+              '<p class="help">Deixe vazio a meta que não quiser usar.</p><p class="msg" id="g-msg" role="status"></p></div>';
+          }
+          if (on && m[0] === 'custokm') {
+            extra = '<div class="mod-extra">' + money('dep', 'Depreciação do carro por mês <span class="opt">(opcional)</span>', '0,00') +
+              '<p class="help">Quanto o carro perde de valor por mês. Entra no custo por km. Deixe vazio para não contar.</p><p class="msg" id="dep-msg" role="status"></p></div>';
+          }
+          return '<label class="check"><input type="checkbox" data-mod="' + m[0] + '"' + (on ? ' checked' : '') + '><span><strong>' + m[1] + '</strong><span class="sub">' + m[2] + '</span></span></label>' + extra;
+        }).join('') +
+      '</div>' +
+      '<details id="sec-backup"><summary>Backup dos dados</summary>' +
         '<p class="muted">Toque em Copiar backup e guarde o texto em um lugar seguro, como as notas do celular. Para restaurar, cole o texto na caixa e toque em Restaurar.</p>' +
         '<textarea id="b-text" rows="5" aria-label="Texto do backup"></textarea>' +
         '<div class="btns"><button class="ghost" id="b-copy">Copiar backup</button><button class="ghost" id="b-restore">Restaurar</button></div>' +
         '<p class="msg" id="b-msg" role="status"></p>' +
       '</details>';
-
-    $('#m-prev').addEventListener('click', function () { month = shiftMonth(month, -1); viewMes(); });
-    $('#m-next').addEventListener('click', function () { month = shiftMonth(month, 1); viewMes(); });
+    $('#view').innerHTML = h;
+    bindCatForm();
+    $('#fx-add').addEventListener('click', addFixed);
+    $$('[data-mod]').forEach(function (b) {
+      b.addEventListener('change', function () {
+        state.cfg.mods[b.dataset.mod] = b.checked;
+        save();
+        var y = window.scrollY;
+        viewAjustes();
+        window.scrollTo(0, y);
+      });
+    });
+    ['dia', 'semana', 'mes'].forEach(function (k) {
+      var f = $('#g-' + k);
+      if (!f) return;
+      f.value = goal(k) ? inNum(goal(k)) : '';
+      f.addEventListener('change', function () {
+        var v = f.value.trim() ? num(f.value) : 0;
+        if (!(v >= 0)) { say($('#g-msg'), 'Valor de meta inválido.', true); return; }
+        state.cfg.goals[k] = v; save();
+        say($('#g-msg'), 'Meta salva.', false);
+      });
+    });
+    var dep = $('#dep');
+    if (dep) {
+      dep.value = state.cfg.deprec ? inNum(state.cfg.deprec) : '';
+      dep.addEventListener('change', function () {
+        var v = dep.value.trim() ? num(dep.value) : 0;
+        if (!(v >= 0)) { say($('#dep-msg'), 'Valor inválido.', true); return; }
+        state.cfg.deprec = v; save();
+        say($('#dep-msg'), 'Depreciação salva.', false);
+      });
+    }
     $('#b-copy').addEventListener('click', copyBackup);
     $('#b-restore').addEventListener('click', function (ev) { arm(ev.currentTarget, 'Toque de novo para substituir os dados', restoreBackup); });
   }
-
+  function bindCatForm() {
+    if (!$('#cf-save')) return;
+    var c = catEdit.indexOf('new:') === 0 ? null : catById(catEdit);
+    var kind = c ? c.kind : catEdit.slice(4);
+    $('#cf-name').focus();
+    $('#cf-cancel').addEventListener('click', function () { catEdit = null; viewAjustes(); });
+    $('#cf-save').addEventListener('click', function () {
+      var msg = $('#cf-msg'), name = $('#cf-name').value.trim();
+      if (!name) { say(msg, 'Dê um nome para a categoria.', true); return; }
+      var dup = catsOf(kind).some(function (x) { return x !== c && x.name.toLowerCase() === name.toLowerCase(); });
+      if (dup) { say(msg, 'Já existe uma categoria de ' + kind + ' com esse nome.', true); return; }
+      var color = ($$('input[name="cf-color"]').filter(function (x) { return x.checked; })[0] || {}).value || COLORS[0];
+      var subs = null;
+      if ($('#cf-subs')) {
+        subs = [];
+        $('#cf-subs').value.split(',').forEach(function (s) { s = s.trim(); if (s && subs.indexOf(s) < 0) subs.push(s); });
+      }
+      if (!c) { c = { id: uid(), kind: kind }; state.cats.push(c); }
+      c.name = name; c.color = color;
+      if (subs) { if (subs.length) c.subs = subs; else delete c.subs; }
+      save();
+      catEdit = null;
+      viewAjustes();
+      $('#sec-cats').scrollIntoView();
+    });
+    var del = $('#cf-del');
+    if (del) del.addEventListener('click', function () {
+      arm(del, 'Toque de novo para excluir', function () {
+        var to = $('#cf-move') ? $('#cf-move').value : null, target = to ? catById(to) : null;
+        state.entries.forEach(function (e) {
+          if (e.cat === c.id && target) { e.cat = target.id; e.kind = target.kind; if (!target.subs || target.subs.indexOf(e.sub) < 0) { if (e.sub) e.note = e.note ? e.sub + ' · ' + e.note : e.sub; delete e.sub; } }
+        });
+        state.fixed.forEach(function (f) {
+          if (f.cat === c.id) f.cat = target ? target.id : (catById('fixos') && c.id !== 'fixos' ? 'fixos' : catsOf('gasto').filter(function (x) { return x.id !== c.id; })[0].id);
+        });
+        state.cats = state.cats.filter(function (x) { return x.id !== c.id; });
+        if (oneCat === c.id) oneCat = state.cats[0].id;
+        save();
+        catEdit = null;
+        viewAjustes();
+        $('#sec-cats').scrollIntoView();
+      });
+    });
+  }
+  function addFixed() {
+    var msg = $('#fx-msg'), name = $('#fx-name').value.trim(), amount = num($('#fx-amount').value), day = Math.round(num($('#fx-day').value));
+    if (!name) { say(msg, 'Dê um nome para o gasto fixo.', true); return; }
+    if (!(amount > 0)) { say(msg, 'Informe o valor por mês.', true); return; }
+    if (!(day >= 1 && day <= 31)) { say(msg, 'O dia do mês vai de 1 a 31.', true); return; }
+    var cur = todayISO().slice(0, 7);
+    var f = { id: uid(), name: name, amount: amount, day: day, cat: $('#fx-cat').value, start: cur };
+    state.fixed.push(f);
+    runFixed();
+    save();
+    var launched = f.next > cur;
+    viewAjustes();
+    var d = $$('details.inner').filter(function (x) { return x.querySelector('#fx-add'); })[0];
+    if (d) d.open = true;
+    say($('#fx-msg'), launched
+      ? 'Salvo. Já lancei o deste mês, no dia ' + Math.min(day, daysIn(cur)) + '.'
+      : 'Salvo. O primeiro lançamento será no dia ' + Math.min(day, daysIn(cur)) + ' deste mês.', false);
+  }
   function copyBackup() {
     var ta = $('#b-text'), msg = $('#b-msg');
-    ta.value = JSON.stringify({ app: 'caixa-motorista', v: 1, entries: state.entries, readings: state.readings });
+    var data = JSON.parse(JSON.stringify(state));
+    data.app = 'caixa-motorista'; data.v = 2;
+    ta.value = JSON.stringify(data);
     ta.focus(); ta.select();
     var done = function () { say(msg, 'Backup copiado. Cole em um lugar seguro.', false); };
     var fallback = function () {
@@ -624,18 +1121,17 @@ textarea { margin-top: 8px; font-size: 14px; }
       else fallback();
     } catch (e) { fallback(); }
   }
-
   function restoreBackup() {
     var ta = $('#b-text'), msg = $('#b-msg');
     try {
       var d = JSON.parse(ta.value);
       if (!d || !Array.isArray(d.entries) || !Array.isArray(d.readings)) throw new Error('formato');
-      state.entries = d.entries;
-      state.readings = d.readings;
+      state = normalize(d);
+      runFixed();
       save();
-      viewMes();
+      viewAjustes();
+      $('#sec-backup').open = true;
       say($('#b-msg'), 'Dados restaurados.', false);
-      $('details').open = true;
     } catch (e) {
       say(msg, 'Não consegui ler esse texto. Cole o backup completo na caixa.', true);
       var b = $('#b-restore');
@@ -646,24 +1142,27 @@ textarea { margin-top: 8px; font-size: 14px; }
 
   /* ---------- navegação e eventos globais ---------- */
   function render() {
-    document.querySelectorAll('.tabs button').forEach(function (b) {
+    $$('.tabs button').forEach(function (b) {
       if (b.dataset.tab === tab) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
     });
+    if (tab !== 'ajustes') catEdit = null;
     if (tab === 'lancar') viewLancar();
     else if (tab === 'km') viewKm();
-    else viewMes();
+    else if (tab === 'resumo') viewResumo();
+    else viewAjustes();
     window.scrollTo(0, 0);
   }
-
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest('button');
     if (!t) return;
-    if (t.dataset.tab) { tab = t.dataset.tab; render(); return; }
+    if (t.dataset.tab) { if (t.dataset.tab !== 'lancar') editing = null; tab = t.dataset.tab; render(); return; }
+    if (t.dataset.editEntry) { startEdit(t.dataset.editEntry); return; }
     if (t.dataset.delEntry) {
       var id = t.dataset.delEntry;
       arm(t, 'Confirmar', function () {
         state.entries = state.entries.filter(function (e) { return e.id !== id; });
-        save(); renderDayList();
+        save();
+        if (editing === id) { editing = null; viewLancar(); } else renderDayList();
       });
       return;
     }
@@ -671,15 +1170,42 @@ textarea { margin-top: 8px; font-size: 14px; }
       var rid = t.dataset.delReading;
       arm(t, 'Confirmar', function () {
         state.readings = state.readings.filter(function (e) { return e.id !== rid; });
-        save(); renderKm();
+        save(); renderKm(); renderRem();
+      });
+      return;
+    }
+    if (t.dataset.remDone) {
+      var cur = currentKm();
+      state.reminders.forEach(function (r) { if (r.id === t.dataset.remDone && cur != null) r.last = cur; });
+      save(); renderRem();
+      return;
+    }
+    if (t.dataset.remDel) {
+      var mid = t.dataset.remDel;
+      arm(t, 'Confirmar', function () {
+        state.reminders = state.reminders.filter(function (r) { return r.id !== mid; });
+        save(); renderRem();
+      });
+      return;
+    }
+    if (t.dataset.catEdit || t.dataset.catNew) {
+      catEdit = t.dataset.catEdit || 'new:' + t.dataset.catNew;
+      viewAjustes();
+      ($('#cf-name').closest('li') || $('#cf-name').closest('details')).scrollIntoView({ block: 'center' });
+      return;
+    }
+    if (t.dataset.fixedDel) {
+      var fid = t.dataset.fixedDel;
+      arm(t, 'Parar de lançar?', function () {
+        state.fixed = state.fixed.filter(function (f) { return f.id !== fid; });
+        save(); viewAjustes();
       });
     }
   });
-
   load();
+  runFixed();
   if (!storageOk) $('#banner').hidden = false;
   render();
-
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', function () {
       navigator.serviceWorker.register('sw.js').catch(function () {});
