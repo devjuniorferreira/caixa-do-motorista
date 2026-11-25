@@ -1,4 +1,4 @@
-const CACHE = 'caixa-motorista-v2';
+const CACHE = 'caixa-motorista-v3';
 const SHELL = [
   './',
   './index.html',
