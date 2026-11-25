@@ -380,6 +380,87 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
   }
   try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 
+  /* ---------- campos de dinheiro: só digitar os números, a vírgula entra sozinha ---------- */
+  function maskMoney(inp) {
+    var digits = inp.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 11);
+    if (!digits) { inp.value = ''; return; }
+    var dec = (inp.classList.contains('in-price') && digits.length > 3) ? 3 : 2;
+    while (digits.length <= dec) digits = '0' + digits;
+    var int = digits.slice(0, digits.length - dec), frac = digits.slice(-dec);
+    int = int.replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    inp.value = int + ',' + frac;
+  }
+  // captura: roda antes dos outros ouvintes, que já leem o valor formatado
+  document.addEventListener('input', function (ev) {
+    var t = ev.target;
+    if (!t || !t.matches || !t.matches('.money input')) return;
+    maskMoney(t);
+  }, true);
+  document.addEventListener('focusin', function (ev) {
+    var t = ev.target;
+    if (t && t.matches && t.matches('.money input') && t.value) setTimeout(function () { try { t.select(); } catch (e) {} }, 0);
+  });
+
+  /* ---------- backup em arquivo (compartilhar para o Drive, WhatsApp, etc.) ---------- */
+  var BK_KEY = 'caixa-motorista-ultimo-backup';
+  function lastBackup() { try { return localStorage.getItem(BK_KEY) || ''; } catch (e) { return ''; } }
+  function markBackup() { try { localStorage.setItem(BK_KEY, todayISO()); } catch (e) {} }
+  function backupJSON() {
+    var data = JSON.parse(JSON.stringify(state));
+    data.app = 'caixa-motorista'; data.v = 2;
+    return JSON.stringify(data);
+  }
+  function backupAlert() {
+    if (!state.entries.length && !state.readings.length) return '';
+    var last = lastBackup(), days;
+    if (last) {
+      days = Math.round((dateOf(todayISO()) - dateOf(last)) / 86400000);
+      if (days < 7) return '';
+    }
+    return '<div class="alert" role="status">' +
+      (last ? 'Faz ' + days + ' dias que você não salva um backup.' : 'Você ainda não salvou um backup dos seus dados.') +
+      '<div class="btns" style="margin-top:8px"><button class="ghost" id="bk-now">Salvar backup agora</button></div></div>';
+  }
+  function shareBackup(msgEl) {
+    var name = 'caixa-do-motorista-' + todayISO() + '.json', text = backupJSON();
+    var okMsg = 'Backup salvo. Guarde esse arquivo no Drive.';
+    var finish = function () { markBackup(); if (msgEl) say(msgEl, okMsg, false); if (tab === 'lancar') render(); };
+    var download = function () {
+      try {
+        var url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
+        var a = document.createElement('a');
+        a.href = url; a.download = name;
+        document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(function () { URL.revokeObjectURL(url); }, 4000);
+        okMsg = 'Baixei o arquivo ' + name + '. Mande ele para o Drive.';
+        finish();
+      } catch (e) { if (msgEl) say(msgEl, 'Não consegui gerar o arquivo. Use Copiar texto.', true); }
+    };
+    try {
+      var file = new File([text], name, { type: 'application/json' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: 'Backup Caixa do Motorista' }).then(finish, function (e) {
+          if (e && e.name === 'AbortError') return;
+          download();
+        });
+        return;
+      }
+    } catch (e) {}
+    download();
+  }
+  function loadBackupFile(inp) {
+    var f = inp.files && inp.files[0], msg = $('#b-msg');
+    if (!f) return;
+    var r = new FileReader();
+    r.onload = function () {
+      $('#b-text').value = String(r.result || '');
+      say(msg, 'Arquivo carregado. Toque em Restaurar para usar esses dados.', false);
+    };
+    r.onerror = function () { say(msg, 'Não consegui abrir esse arquivo.', true); };
+    r.readAsText(f);
+    inp.value = '';
+  }
+
   /* ---------- gastos fixos: lança sozinho todo mês ---------- */
   function runFixed() {
     var today = todayISO(), cur = today.slice(0, 7), changed = false;
@@ -506,7 +587,7 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
   function viewLancar() {
     if (!catById(oneCat)) oneCat = state.cats[0].id;
     var i = 0;
-    var h = maintAlert() +
+    var h = backupAlert() + maintAlert() +
       '<div class="card"><label for="f-date" style="margin-top:0">Dia do lançamento</label><input type="date" id="f-date" value="' + formDate + '">' +
       (mod('horas') ? '<label for="f-hours">Horas rodadas neste dia <span class="opt">(opcional)</span></label><input id="f-hours" inputmode="decimal" autocomplete="off" placeholder="ex.: 8,5">' : '') +
       (editing
@@ -1002,9 +1083,12 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
         }).join('') +
       '</div>' +
       '<details id="sec-backup"><summary>Backup dos dados</summary>' +
-        '<p class="muted">Toque em Copiar backup e guarde o texto em um lugar seguro, como as notas do celular. Para restaurar, cole o texto na caixa e toque em Restaurar.</p>' +
+        '<p class="muted">Toque em Salvar arquivo e escolha o Drive (ou WhatsApp) para guardar uma cópia. ' + (lastBackup() ? 'Último backup: ' + dmy(lastBackup()) + '.' : 'Você ainda não salvou nenhum backup.') + '</p>' +
+        '<div class="btns"><button id="b-share">Salvar arquivo de backup</button></div>' +
+        '<p class="muted">Para restaurar, abra o arquivo salvo (ou cole o texto na caixa) e toque em Restaurar.</p>' +
+        '<div class="btns"><button class="ghost" id="b-open">Abrir arquivo de backup</button></div><input type="file" id="b-file" accept=".json,application/json,text/plain" hidden>' +
         '<textarea id="b-text" rows="5" aria-label="Texto do backup"></textarea>' +
-        '<div class="btns"><button class="ghost" id="b-copy">Copiar backup</button><button class="ghost" id="b-restore">Restaurar</button></div>' +
+        '<div class="btns"><button class="ghost" id="b-copy">Copiar texto</button><button class="ghost" id="b-restore">Restaurar</button></div>' +
         '<p class="msg" id="b-msg" role="status"></p>' +
       '</details>';
     $('#view').innerHTML = h;
@@ -1041,6 +1125,9 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
       });
     }
     $('#b-copy').addEventListener('click', copyBackup);
+    $('#b-share').addEventListener('click', function () { shareBackup($('#b-msg')); });
+    $('#b-open').addEventListener('click', function () { $('#b-file').click(); });
+    $('#b-file').addEventListener('change', function (ev) { loadBackupFile(ev.target); });
     $('#b-restore').addEventListener('click', function (ev) { arm(ev.currentTarget, 'Toque de novo para substituir os dados', restoreBackup); });
   }
   function bindCatForm() {
@@ -1111,7 +1198,7 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
     data.app = 'caixa-motorista'; data.v = 2;
     ta.value = JSON.stringify(data);
     ta.focus(); ta.select();
-    var done = function () { say(msg, 'Backup copiado. Cole em um lugar seguro.', false); };
+    var done = function () { markBackup(); say(msg, 'Backup copiado. Cole em um lugar seguro.', false); };
     var fallback = function () {
       try { if (document.execCommand('copy')) { done(); return; } } catch (e) {}
       say(msg, 'Selecionei o texto. Segure sobre ele e escolha Copiar.', false);
@@ -1155,6 +1242,7 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
   document.addEventListener('click', function (ev) {
     var t = ev.target.closest('button');
     if (!t) return;
+    if (t.id === 'bk-now') { shareBackup(null); return; }
     if (t.dataset.tab) { if (t.dataset.tab !== 'lancar') editing = null; tab = t.dataset.tab; render(); return; }
     if (t.dataset.editEntry) { startEdit(t.dataset.editEntry); return; }
     if (t.dataset.delEntry) {
