@@ -396,10 +396,12 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
     if (!t || !t.matches || !t.matches('.money input')) return;
     maskMoney(t);
   }, true);
-  document.addEventListener('focusin', function (ev) {
+  function selectMoney(ev) {
     var t = ev.target;
     if (t && t.matches && t.matches('.money input') && t.value) setTimeout(function () { try { t.select(); } catch (e) {} }, 0);
-  });
+  }
+  document.addEventListener('focusin', selectMoney);
+  document.addEventListener('click', selectMoney);
 
   /* ---------- backup em arquivo (compartilhar para o Drive, WhatsApp, etc.) ---------- */
   var BK_KEY = 'caixa-motorista-ultimo-backup';
@@ -571,7 +573,7 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
     if (c.fuel) {
       h += '<div class="row2"><div>' + money(p + '-a', 'Valor pago', '50,00', 'in-amount') + '</div><div>' + money(p + '-p', 'Preço do litro', '5,00', 'in-price') + '</div></div>' +
         '<label for="' + p + '-t">Combustível</label><select id="' + p + '-t" class="in-type"><option value="etanol">Etanol</option><option value="gasolina">Gasolina</option></select>' +
-        '<p class="calc in-liters"></p>';
+        '<p class="help in-hint" hidden></p><p class="calc in-liters"></p>';
     } else {
       h += money(p + '-a', c.kind === 'ganho' ? 'Valor recebido' : 'Valor gasto', '0,00', 'in-amount');
       if (c.subs && c.subs.length) {
@@ -605,7 +607,12 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
     $$('.cat').forEach(function (b) {
       if (!b.querySelector('.in-price')) return;
       $$('.in-amount, .in-price', b).forEach(function (x) { x.addEventListener('input', function () { updLiters(b); }); });
-      b.querySelector('.in-type').addEventListener('change', function () { updLiters(b); });
+      var pin = b.querySelector('.in-price'), typ = b.querySelector('.in-type');
+      var lastE = lastFuelEntry(b.dataset.cat);
+      if (lastE && lastE.fuel) typ.value = lastE.fuel;
+      applyLastPrice(b);
+      pin.addEventListener('input', function () { pin.dataset.auto = ''; b.querySelector('.in-hint').hidden = true; });
+      typ.addEventListener('change', function () { if (pin.dataset.auto === '1' || !pin.value) applyLastPrice(b); updLiters(b); });
       updLiters(b);
     });
     $('#f-date').addEventListener('change', function () { formDate = $('#f-date').value || todayISO(); fillHours(); renderDayList(); });
@@ -634,6 +641,26 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
     $$('.cat-title').forEach(function (t) { t.hidden = um; });
     $$('.note-wrap').forEach(function (n) { n.hidden = !um; });
     $('#save-day').textContent = editing ? 'Salvar alteração' : um ? 'Salvar lançamento' : 'Salvar tudo';
+  }
+  // último preço lançado de cada combustível (pela ordem em que foram lançados)
+  function lastFuelEntry(cat, fuel) {
+    for (var i = state.entries.length - 1; i >= 0; i--) {
+      var e = state.entries[i];
+      if (e.cat === cat && e.price > 0 && (!fuel || e.fuel === fuel)) return e;
+    }
+    return null;
+  }
+  function applyLastPrice(b) {
+    var pin = b.querySelector('.in-price'), hint = b.querySelector('.in-hint'), fuel = b.querySelector('.in-type').value;
+    var e = lastFuelEntry(b.dataset.cat, fuel);
+    if (e) {
+      pin.value = inNum(e.price, 3); pin.dataset.auto = '1';
+      hint.textContent = 'Preço do seu último abastecimento de ' + fuel + '. Toque no preço para mudar.';
+      hint.hidden = false;
+    } else {
+      pin.value = ''; pin.dataset.auto = ''; hint.hidden = true;
+    }
+    updLiters(b);
   }
   function updLiters(b) {
     var a = num(b.querySelector('.in-amount').value), p = num(b.querySelector('.in-price').value);
@@ -710,6 +737,7 @@ details.inner { margin: 12px 0 0; padding: 10px 12px; background: var(--bg); }
     b.querySelector('.in-amount').value = inNum(e.amount);
     if (b.querySelector('.in-price')) {
       b.querySelector('.in-price').value = inNum(e.price, 3);
+      b.querySelector('.in-price').dataset.auto = ''; b.querySelector('.in-hint').hidden = true;
       if (e.fuel) b.querySelector('.in-type').value = e.fuel;
       updLiters(b);
     }
